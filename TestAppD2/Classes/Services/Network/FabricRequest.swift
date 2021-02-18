@@ -6,9 +6,9 @@
 //  Copyright © 2019 . All rights reserved.
 //
 
-import UIKit
+import Foundation
 
-class FabricRequest: NSObject {
+final class FabricRequest: NSObject {
     
     class func request(tagged stringTagged: String?, numberOfPageToLoad: Int, withBlock completionHandler: @escaping (_ data: Data?) -> Void) {
         let protocolHostPath = "https://api.stackexchange.com/2.2/questions"

@@ -28,6 +28,11 @@
 		D71B38F525DEB76F00E0CDE7 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B38F425DEB76F00E0CDE7 /* Item.swift */; };
 		D71B38F825DEB7BF00E0CDE7 /* Owner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B38F725DEB7BF00E0CDE7 /* Owner.swift */; };
 		D71B38FB25DEB8ED00E0CDE7 /* AnswerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B38FA25DEB8ED00E0CDE7 /* AnswerItem.swift */; };
+		D71B390225DEC41200E0CDE7 /* ServiceLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B390125DEC41200E0CDE7 /* ServiceLayer.swift */; };
+		D71B390625DEC9D900E0CDE7 /* StackoverflowService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B390525DEC9D900E0CDE7 /* StackoverflowService.swift */; };
+		D71B390925DECCAB00E0CDE7 /* ServerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B390825DECCAB00E0CDE7 /* ServerSettings.swift */; };
+		D71B390D25DED14300E0CDE7 /* URL+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B390C25DED14300E0CDE7 /* URL+extension.swift */; };
+		D71B391425DED79500E0CDE7 /* ApiError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D71B391325DED79500E0CDE7 /* ApiError.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +59,11 @@
 		D71B38F425DEB76F00E0CDE7 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		D71B38F725DEB7BF00E0CDE7 /* Owner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Owner.swift; sourceTree = "<group>"; };
 		D71B38FA25DEB8ED00E0CDE7 /* AnswerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerItem.swift; sourceTree = "<group>"; };
+		D71B390125DEC41200E0CDE7 /* ServiceLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayer.swift; sourceTree = "<group>"; };
+		D71B390525DEC9D900E0CDE7 /* StackoverflowService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackoverflowService.swift; sourceTree = "<group>"; };
+		D71B390825DECCAB00E0CDE7 /* ServerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSettings.swift; sourceTree = "<group>"; };
+		D71B390C25DED14300E0CDE7 /* URL+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+extension.swift"; sourceTree = "<group>"; };
+		D71B391325DED79500E0CDE7 /* ApiError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +109,7 @@
 		6B14A32921F9BA620011CF22 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				D71B390B25DED12F00E0CDE7 /* Extensions */,
 				D71B38FD25DEB97200E0CDE7 /* Services */,
 				6B14A33621F9BBBD0011CF22 /* Models */,
 				6B14A33121F9BB530011CF22 /* Cells */,
@@ -138,6 +149,8 @@
 				6B14A34121F9C36A0011CF22 /* Question.swift */,
 				D71B38F725DEB7BF00E0CDE7 /* Owner.swift */,
 				D71B38F425DEB76F00E0CDE7 /* Item.swift */,
+				D71B391325DED79500E0CDE7 /* ApiError.swift */,
+				D71B390825DECCAB00E0CDE7 /* ServerSettings.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -147,6 +160,7 @@
 			children = (
 				D71B38FF25DEB9DA00E0CDE7 /* Storage */,
 				D71B38FE25DEB9CD00E0CDE7 /* Network */,
+				D71B390125DEC41200E0CDE7 /* ServiceLayer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -155,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				6B14A33721F9BDF50011CF22 /* FabricRequest.swift */,
+				D71B390525DEC9D900E0CDE7 /* StackoverflowService.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -174,6 +189,14 @@
 				6B14A33921F9C2E70011CF22 /* StoredData.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		D71B390B25DED12F00E0CDE7 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				D71B390C25DED14300E0CDE7 /* URL+extension.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -252,13 +275,18 @@
 				6B14A31A21F9B9F60011CF22 /* MasterViewController.swift in Sources */,
 				6B14A33A21F9C2E70011CF22 /* StoredData.swift in Sources */,
 				6B14A33C21F9C3090011CF22 /* CacheWithTimeInterval.swift in Sources */,
+				D71B390225DEC41200E0CDE7 /* ServiceLayer.swift in Sources */,
 				6B14A34021F9C34A0011CF22 /* Answer.swift in Sources */,
 				D71B38F525DEB76F00E0CDE7 /* Item.swift in Sources */,
+				D71B390625DEC9D900E0CDE7 /* StackoverflowService.swift in Sources */,
 				6B14A32C21F9BAED0011CF22 /* MenuViewController.swift in Sources */,
 				6B14A33521F9BBAE0011CF22 /* AnswerTableViewCell.swift in Sources */,
+				D71B390D25DED14300E0CDE7 /* URL+extension.swift in Sources */,
 				6B14A33021F9BB260011CF22 /* DetailViewController.swift in Sources */,
+				D71B390925DECCAB00E0CDE7 /* ServerSettings.swift in Sources */,
 				6B14A33321F9BB910011CF22 /* QuestionTableViewCell.swift in Sources */,
 				6B14A34221F9C36B0011CF22 /* Question.swift in Sources */,
+				D71B391425DED79500E0CDE7 /* ApiError.swift in Sources */,
 				D71B38FB25DEB8ED00E0CDE7 /* AnswerItem.swift in Sources */,
 				6B14A32E21F9BB070011CF22 /* ContainerViewController.swift in Sources */,
 				6B14A33821F9BDF50011CF22 /* FabricRequest.swift in Sources */,

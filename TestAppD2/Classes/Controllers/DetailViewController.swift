@@ -8,17 +8,27 @@
 
 import UIKit
 
-class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+// Контроллер экрана ответов на вопрос
+final class DetailViewController: UIViewController {
 
+    // MARK: - Public properties
+    
+    var currentQuestion: Item!
+    
+    // MARK: - IBOutlet
+    
+    @IBOutlet var tableView: UITableView!
+    @IBOutlet var titleNavigationItem: UINavigationItem!
+    
+    // MARK: - Private properties
+    
     private let kQuestionCellIdentifier = "CellForQuestion"
     private let kAnswerCellIdentifier = "CellForAnswer"
+    private var refreshControl: UIRefreshControl!
+    private var activityIndicatorView: UIActivityIndicatorView!
+    private var answers: [AnswerItem]! = [AnswerItem()]
     
-    @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var titleNavigationItem: UINavigationItem!
-    var refreshControl: UIRefreshControl!
-    var activityIndicatorView: UIActivityIndicatorView!
-    var answers: [AnswerItem]! = [AnswerItem()]
-    var currentQuestion: Item!
+    // MARK: - UIViewController
     
     override func viewDidLoad() {
         tableView.register(UINib(nibName: "AnswerTableViewCell", bundle: nil), forCellReuseIdentifier: kAnswerCellIdentifier)
@@ -28,7 +38,68 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
         addActivityIndicator()
     }
     
-    // MARK: - TableView
+    // MARK: - Public Methods
+    
+    func loadAnswers() {
+        FabricRequest.request(withQuestionID: currentQuestion.question_id!) { data in
+            self.reload(inTableView: data)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    @objc func reloadData() {
+        tableView.reloadData()
+        if refreshControl != nil {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d, h:mm a"
+            let title = "Last update: \(formatter.string(from: Date()))"
+            let attrsDictionary = [NSAttributedString.Key.foregroundColor : UIColor.black]
+            let attributedTitle = NSAttributedString(string: title, attributes: attrsDictionary)
+            refreshControl?.attributedTitle = attributedTitle
+            refreshControl?.endRefreshing()
+        }
+    }
+
+    private func addActivityIndicator() {
+        activityIndicatorView = UIActivityIndicatorView()
+        activityIndicatorView.style = .gray
+        let bounds: CGRect = UIScreen.main.bounds
+        activityIndicatorView.center = CGPoint(x: bounds.size.width / 2, y: bounds.size.height / 2)
+        activityIndicatorView.hidesWhenStopped = true
+        view.addSubview(activityIndicatorView)
+    }
+    
+    private func addRefreshControlOnTabelView() {
+        refreshControl = UIRefreshControl()
+        refreshControl?.addTarget(self, action: #selector(self.reloadData), for: .valueChanged)
+        refreshControl?.backgroundColor = UIColor.white
+        if let aControl = refreshControl {
+            tableView.addSubview(aControl)
+        }
+    }
+    
+    private func settingDynamicHeightForCell() {
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 100
+    }
+    
+    private func reload(inTableView jsonData: Data?) {
+        answers = [AnswerItem]()
+        if let answerModel = try? JSONDecoder().decode(Answer.self, from: jsonData!) {
+            answers = answerModel.items
+        }
+        DispatchQueue.main.async(execute: {
+            self.tableView.reloadData()
+            self.activityIndicatorView.stopAnimating()
+        })
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension DetailViewController: UITableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if answers.count == 0 {
             activityIndicatorView.startAnimating()
@@ -50,60 +121,4 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
             return cell!
         }
     }
-    
-    @objc func reloadData() {
-        tableView.reloadData()
-        if refreshControl != nil {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMM d, h:mm a"
-            let title = "Last update: \(formatter.string(from: Date()))"
-            let attrsDictionary = [NSAttributedString.Key.foregroundColor : UIColor.black]
-            let attributedTitle = NSAttributedString(string: title, attributes: attrsDictionary)
-            refreshControl?.attributedTitle = attributedTitle
-            refreshControl?.endRefreshing()
-        }
-    }
-    
-    // MARK: - Public
-    func loadAnswers() {
-        FabricRequest.request(withQuestionID: currentQuestion.question_id!) { data in
-            self.reload(inTableView: data)
-        }
-    }
-
-    // MARK: - Private
-    func addActivityIndicator() {
-        activityIndicatorView = UIActivityIndicatorView()
-        activityIndicatorView.style = .gray
-        let bounds: CGRect = UIScreen.main.bounds
-        activityIndicatorView.center = CGPoint(x: bounds.size.width / 2, y: bounds.size.height / 2)
-        activityIndicatorView.hidesWhenStopped = true
-        view.addSubview(activityIndicatorView)
-    }
-    
-    func addRefreshControlOnTabelView() {
-        refreshControl = UIRefreshControl()
-        refreshControl?.addTarget(self, action: #selector(self.reloadData), for: .valueChanged)
-        refreshControl?.backgroundColor = UIColor.white
-        if let aControl = refreshControl {
-            tableView.addSubview(aControl)
-        }
-    }
-    
-    func settingDynamicHeightForCell() {
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 100
-    }
-    
-    func reload(inTableView jsonData: Data?) {
-        answers = [AnswerItem]()
-        if let answerModel = try? JSONDecoder().decode(Answer.self, from: jsonData!) {
-            answers = answerModel.items
-        }
-        DispatchQueue.main.async(execute: {
-            self.tableView.reloadData()
-            self.activityIndicatorView.stopAnimating()
-        })
-    }
-
 }

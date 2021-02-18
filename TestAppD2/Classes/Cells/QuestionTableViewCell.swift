@@ -8,13 +8,18 @@
 
 import UIKit
 
-class QuestionTableViewCell: UITableViewCell {
+// Ячейка вопросов
+final class QuestionTableViewCell: UITableViewCell {
 
-    @IBOutlet weak var quesionLabel: UILabel!
-    @IBOutlet weak var autorLabel: UILabel!
-    @IBOutlet var dateModificationLabel: UILabel!
-    @IBOutlet weak var numberOfAnswerLabel: UILabel!
-    @IBOutlet weak var corneredView: UIView!
+    // MARK: - IBOutlet
+    
+    @IBOutlet private var quesionLabel: UILabel!
+    @IBOutlet private var autorLabel: UILabel!
+    @IBOutlet private var dateModificationLabel: UILabel!
+    @IBOutlet private var numberOfAnswerLabel: UILabel!
+    @IBOutlet private var corneredView: UIView!
+    
+    // MARK: - UITableViewCell
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -25,6 +30,8 @@ class QuestionTableViewCell: UITableViewCell {
         corneredView.layer.shadowOffset = CGSize.zero
         corneredView.layer.shadowRadius = 5
     }
+    
+    // MARK: - Public Methods
 
     func fill(_ question: Item?) {
         quesionLabel.text = question?.title

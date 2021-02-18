@@ -8,26 +8,27 @@
 
 import UIKit
 
-class ContainerViewController: UIViewController {
-
-    @IBOutlet weak var tableContainerView: UIView!
-    @IBOutlet weak var mainContainerView: UIView!
-    @IBOutlet weak var leadingTabelViewLayoutConstraint: NSLayoutConstraint!
-    @IBOutlet weak var trailingTableViewLayoutConstraint: NSLayoutConstraint!
-    @IBOutlet weak var containerNavigationItem: UINavigationItem!
+/// Контейнер главного экрана
+final class ContainerViewController: UIViewController {
     
-    // MARK: - Lifecycle
+    // MARK: - IBOutlet
+
+    @IBOutlet private var tableContainerView: UIView!
+    @IBOutlet private var mainContainerView: UIView!
+    @IBOutlet private var leadingTabelViewLayoutConstraint: NSLayoutConstraint!
+    @IBOutlet private var trailingTableViewLayoutConstraint: NSLayoutConstraint!
+    @IBOutlet private var containerNavigationItem: UINavigationItem!
+    
+    // MARK: - UIViewController
+    
     override func viewDidLoad() {
         navigationItem.title = "objective-c"
         NotificationCenter.default.addObserver(self, selector: #selector(self.requestedTagNotification(_:)), name: NSNotification.Name("RequestedTagNotification"), object: nil)
     }
 
-    @objc func requestedTagNotification(_ notification: NSNotification) {
-        let requestedTag = notification.object as! String
-        title = requestedTag
-    }
+    // MARK: - IBAction
     
-    @IBAction func menu(_ sender: Any) {
+    @IBAction private func menu(_ sender: Any) {
         if leadingTabelViewLayoutConstraint.constant == 0 {
             leadingTabelViewLayoutConstraint.constant = UIScreen.main.bounds.size.width / 2
             trailingTableViewLayoutConstraint.constant = UIScreen.main.bounds.size.width * -0.5
@@ -41,5 +42,12 @@ class ContainerViewController: UIViewController {
                 self.view.layoutIfNeeded()
             })
         }
-    }    
+    }
+    
+    // MARK: - Private Methods
+    
+    @objc private func requestedTagNotification(_ notification: NSNotification) {
+        let requestedTag = notification.object as! String
+        title = requestedTag
+    }
 }

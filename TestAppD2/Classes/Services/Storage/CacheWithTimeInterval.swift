@@ -8,6 +8,7 @@
 
 import UIKit
 
+// TODO - Переписать в сервис
 class CacheWithTimeInterval: NSObject {
 
     class func objectForKey(_ key: String) -> Data? {
@@ -36,17 +37,15 @@ class CacheWithTimeInterval: NSObject {
     
     class func set(data: Data?, for key: String) {
         var arrayOfCachedData: [Data] = []
-        if UserDefaults.standard.array(forKey: "cache") != nil {
-            arrayOfCachedData = UserDefaults.standard.array(forKey: "cache") as! [Data]
+        if let cache = UserDefaults.standard.array(forKey: "cache"),
+           let cachedData = cache as? [Data] {
+            arrayOfCachedData = cachedData
         }
-        if data != nil {
-            if CacheWithTimeInterval.objectForKey(key) == nil {
-                let storedData = StoredData(key: key, date: Date(), data: data!)
-                let data = try? PropertyListEncoder().encode(storedData)
-                arrayOfCachedData.append(data!)
-            }
+        if let data = data,
+           CacheWithTimeInterval.objectForKey(key) == nil,
+           let storedData = try? PropertyListEncoder().encode(StoredData(key: key, date: Date(), data: data)) {
+            arrayOfCachedData.append(storedData)
         }
         UserDefaults.standard.set(arrayOfCachedData, forKey: "cache")
     }
-    
 }

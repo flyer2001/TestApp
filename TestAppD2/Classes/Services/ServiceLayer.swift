@@ -11,6 +11,9 @@ import Foundation
 ///  Сервисный слой
 final class ServiceLayer {
     
-    let stackoverflowService: StackoverflowService
+    static let shared = ServiceLayer()
     
+    private(set) lazy var cacheService: CacheService = CacheWithTimeInterval()
+    
+    private(set) lazy var stackoverflowService: StackoverflowService = MainStackoverflowService(cacheService: cacheService)
 }

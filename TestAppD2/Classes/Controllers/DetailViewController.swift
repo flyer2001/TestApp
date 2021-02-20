@@ -27,6 +27,7 @@ final class DetailViewController: UIViewController {
     private var refreshControl: UIRefreshControl!
     private var activityIndicatorView: UIActivityIndicatorView!
     private var answers: [AnswerItem]! = [AnswerItem()]
+    private let stackoverflowService: StackoverflowService = ServiceLayer.shared.stackoverflowService
     
     // MARK: - UIViewController
     
@@ -41,8 +42,15 @@ final class DetailViewController: UIViewController {
     // MARK: - Public Methods
     
     func loadAnswers() {
-        FabricRequest.request(withQuestionID: currentQuestion.question_id!) { data in
-            self.reload(inTableView: data)
+        guard let id = currentQuestion.question_id else { return }
+        stackoverflowService.getAnswers(id: id) { [weak self] result in
+            switch result {
+            case .failure:
+                // TODO: обрабобать ошибку
+            print("error")
+            case .success(let answers):
+                self?.reload(inTableView: answers)
+            }
         }
     }
     
@@ -84,11 +92,8 @@ final class DetailViewController: UIViewController {
         tableView.estimatedRowHeight = 100
     }
     
-    private func reload(inTableView jsonData: Data?) {
-        answers = [AnswerItem]()
-        if let answerModel = try? JSONDecoder().decode(Answer.self, from: jsonData!) {
-            answers = answerModel.items
-        }
+    private func reload(inTableView answers: [AnswerItem]) {
+        self.answers = answers
         DispatchQueue.main.async(execute: {
             self.tableView.reloadData()
             self.activityIndicatorView.stopAnimating()

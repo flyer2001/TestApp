@@ -21,13 +21,15 @@ final class MasterViewController: UIViewController {
     
     private let kCellIdentifier = "CellForQuestion"
     private var activityIndicatorView: UIActivityIndicatorView!
-    private var questions: [Item]? = []
+    private var questions: [Item] = []
     private var refreshControl: UIRefreshControl?
     private var loadMoreStatus = false
     private var numberOfPageToLoad: Int = 0
     private var requestedTag = ""
     private var panRecognizer: UIPanGestureRecognizer?
     private var screenEdgePanRecognizer: UIScreenEdgePanGestureRecognizer?
+    private let stackoverflowService: StackoverflowService = ServiceLayer.shared.stackoverflowService
+    private let cacheService: CacheService = ServiceLayer.shared.cacheService
     
     // MARK: - UIViewController
     
@@ -45,18 +47,34 @@ final class MasterViewController: UIViewController {
         requestedTag = ArrayOfTags.shared[0]
         definesPresentationContext = true
         questions = [Item]()
-        FabricRequest.request(
-            tagged: requestedTag,
-            numberOfPageToLoad: numberOfPageToLoad) { (data) in
-            self.reload(inTableView: data, removeAllObjects: true)
-        }
-        numberOfPageToLoad += 1
+        loadQuestions(by: requestedTag)
+        
+        // Очищение кеша при запуске приложения
+        cacheService.resetDefaults()
     }
+    
+    private func loadQuestions(by tag: String, completion: (() -> Void)? = nil) {
+        stackoverflowService.getQuestions(
+            tag: requestedTag,
+            numberOfPageToLoad: numberOfPageToLoad) { [weak self] result in
+            self?.activityIndicatorView.stopAnimating()
+            switch result {
+            case .failure:
+                // TODO: - обработать ошибку
+                print("error")
+            case .success(let questions):
+                self?.reload(inTableView: questions, removeAllObjects: true)
+                self?.numberOfPageToLoad += 1
+                completion?()
+            }
+        }
+    }
+    
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let indexPath: IndexPath? = tableView.indexPathForSelectedRow
         let detailViewController = (segue.destination as? UINavigationController)?.topViewController as? DetailViewController
-        let item = questions?[indexPath?.row ?? 0]
+        let item = questions[indexPath?.row ?? 0]
         detailViewController?.currentQuestion = item
         detailViewController?.loadAnswers()
         detailViewController?.navigationItem.leftBarButtonItem = splitViewController?.displayModeButtonItem
@@ -123,12 +141,9 @@ final class MasterViewController: UIViewController {
     
     @objc private func reloadData() {
         numberOfPageToLoad = 1
-        FabricRequest.request(
-            tagged: requestedTag,
-            numberOfPageToLoad: numberOfPageToLoad) { (data) in
-            self.reload(inTableView: data, removeAllObjects: true)
-        }
-        numberOfPageToLoad += 1
+        
+        loadQuestions(by: requestedTag)
+        
         if refreshControl != nil {
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d, h:mm a"
@@ -140,29 +155,20 @@ final class MasterViewController: UIViewController {
         }
     }
     
-    private func reload(inTableView jsonData: Data?, removeAllObjects: Bool) {
-        if removeAllObjects {
-            questions = [Item]()
-        }
-        if let items = try? JSONDecoder().decode(Question.self, from: jsonData!).items {
-            questions = questions! + items!
-        }
-        DispatchQueue.main.async(execute: {
-            self.tableView.reloadData()
-            self.activityIndicatorView.stopAnimating()
-        })
+    private func reload(inTableView questions: [Item], removeAllObjects: Bool) {
+        if removeAllObjects { self.questions = [] }
+        self.questions += questions
+        tableView.reloadData()
+        activityIndicatorView.stopAnimating()
     }
     
     // MARK: - Notification
     
     @objc private func requestedTagNotification(_ notification: Notification?) {
         activityIndicatorView.startAnimating()
-        requestedTag = notification?.object as! String
+        guard let newTag = notification?.object as? String else { return }
         numberOfPageToLoad = 1
-        FabricRequest.request(tagged: requestedTag, numberOfPageToLoad: numberOfPageToLoad) { (data) in
-            self.reload(inTableView: data, removeAllObjects: true)
-        }
-        numberOfPageToLoad += 1
+        loadQuestions(by: requestedTag)
     }
 }
 
@@ -171,16 +177,16 @@ final class MasterViewController: UIViewController {
 extension MasterViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if questions?.count == 0 {
+        if questions.count == 0 {
             activityIndicatorView.startAnimating()
         }
-        return questions?.count ?? 0
+        return questions.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: kCellIdentifier, for: indexPath) as? QuestionTableViewCell
-        if questions?.count ?? 0 > 0 {
-            cell?.fill(questions?[indexPath.row])
+        if questions.count > 0 {
+            cell?.fill(questions[indexPath.row])
         }
         return cell!
     }
@@ -203,10 +209,8 @@ extension MasterViewController: UITableViewDelegate {
             activityIndicatorView.center = CGPoint(x: bounds.size.width / 2, y: bounds.size.height - 50)
             activityIndicatorView.startAnimating()
             loadMoreStatus = true
-            FabricRequest.request(
-                tagged: requestedTag,
-                numberOfPageToLoad: numberOfPageToLoad) { (data) in
-                self.reload(inTableView: data, removeAllObjects: false)
+            loadQuestions(by: requestedTag) {
+                self.reload(inTableView: self.questions, removeAllObjects: false)
                 self.loadMoreStatus = false
                 self.numberOfPageToLoad += 1
                 self.activityIndicatorView.center = CGPoint(

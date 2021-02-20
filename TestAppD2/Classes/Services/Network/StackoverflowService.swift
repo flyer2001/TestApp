@@ -21,16 +21,27 @@ protocol StackoverflowService: class {
     /// - Parameters:
     ///   - id: идентификационный номер вопроса
     ///   - completion: обработчик результата запроса
-    func getAnswers(id: String, completion: @escaping (Result<[Answer], Error>) -> Void)
+    func getAnswers(id: Int, completion: @escaping (Result<[AnswerItem], Error>) -> Void)
     
 }
 
 final class MainStackoverflowService: StackoverflowService {
     
+    // MARK: - Private Properties
+    
     private let baseUrl = ServerSettings.production.baseUrl
     private let apiKey = ServerSettings.production.apiKey
     
     private let defaultSession = URLSession(configuration: URLSessionConfiguration.default)
+    private let cacheService: CacheService
+    
+    // MARK: - Init
+    
+    init(cacheService: CacheService) {
+        self.cacheService = cacheService
+    }
+    
+    // MARK: - Public Methods
     
     func getQuestions(
         tag: String,
@@ -47,10 +58,11 @@ final class MainStackoverflowService: StackoverflowService {
         queryItems.append(URLQueryItem(name: "page", value: "\(numberOfPageToLoad)"))
         url = url.withQueryItems(queryItems)
         
-        if CacheWithTimeInterval.objectForKey(url.absoluteString) == nil {
+        if cacheService.get(url.absoluteString) == nil {
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
         
+            // TODO: - Сетевой запрос в отдельный поток
             let task = defaultSession.dataTask(with: request) { (data, response, error) in
                 guard let data = data, error == nil else {
                     completion(.failure(AppError.serverError))
@@ -61,18 +73,45 @@ final class MainStackoverflowService: StackoverflowService {
                 } else {
                     completion(.failure(AppError.parsingError))
                 }
-                // TODO: - Кешировать готовые модели
-                CacheWithTimeInterval.set(data: data, for: url.absoluteString)
+                self.cacheService.set(data: data, for: url.absoluteString)
             }
             task.resume()
         } else {
-            // TODO: Достать из кеша значения
-            //completionHandler(CacheWithTimeInterval.objectForKey(stringURL))
+            if let cacheData = cacheService.get(url.absoluteString),
+               let question = try? JSONDecoder().decode(Question.self, from: cacheData),
+               let items = question.items {
+                completion(.success(items))
+            }
         }
     }
     
-    func getAnswers(id: String, completion: @escaping (Result<[Answer], Error>) -> Void) {
-        // TODO: - реализовать логику для метода
+    func getAnswers(id: Int, completion: @escaping (Result<[AnswerItem], Error>) -> Void) {
+        var url = baseUrl.appendingPathComponent("/questions")
+        var queryItems: [URLQueryItem] = []
+        url.appendPathComponent(String(format: "/%li", id))
+        url.appendPathComponent("/answers")
+        queryItems.append(URLQueryItem(name: "order", value: "desc"))
+        queryItems.append(URLQueryItem(name: "sort", value: "activity"))
+        queryItems.append(URLQueryItem(name: "site", value: "stackoverflow"))
+        queryItems.append(URLQueryItem(name: "key", value: apiKey))
+        queryItems.append(URLQueryItem(name: "filter", value: "!9YdnSMKKT"))
+        url = url.withQueryItems(queryItems)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let task = defaultSession.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                completion(.failure(AppError.serverError))
+                return
+            }
+            if let answerData = try? JSONDecoder().decode(Answer.self, from: data), let answers = answerData.items {
+                completion(.success(answers))
+            } else {
+                completion(.failure(AppError.parsingError))
+            }
+            self.cacheService.set(data: data, for: url.absoluteString)
+        }
+        task.resume()
     }
 }
 

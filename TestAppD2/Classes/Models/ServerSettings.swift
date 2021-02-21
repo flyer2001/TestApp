@@ -15,5 +15,5 @@ struct ServerSettings {
 
     static let production = ServerSettings(
         baseUrl: URL(string: "https://api.stackexchange.com/2.2")!,
-        apiKey: "G*0DJzE8SfBrKn4tMej85Q")
+        apiKey: "G*0DJzE8SfBrKn4tMej85Q((")
 }

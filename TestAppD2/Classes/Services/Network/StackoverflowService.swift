@@ -34,6 +34,7 @@ final class MainStackoverflowService: StackoverflowService {
     
     private let defaultSession = URLSession(configuration: URLSessionConfiguration.default)
     private let cacheService: CacheService
+    private let completionQueue: DispatchQueue = DispatchQueue.main
     
     // MARK: - Init
     
@@ -58,10 +59,12 @@ final class MainStackoverflowService: StackoverflowService {
         queryItems.append(URLQueryItem(name: "page", value: "\(numberOfPageToLoad)"))
         url = url.withQueryItems(queryItems)
         
+        let completionQueue = self.completionQueue
+        
         if cacheService.get(url.absoluteString) == nil {
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
-        
+            
             // TODO: - Сетевой запрос в отдельный поток
             let task = defaultSession.dataTask(with: request) { (data, response, error) in
                 guard let data = data, error == nil else {
@@ -69,9 +72,13 @@ final class MainStackoverflowService: StackoverflowService {
                     return
                 }
                 if let question = try? JSONDecoder().decode(Question.self, from: data), let items = question.items {
-                    completion(.success(items))
+                    completionQueue.async {
+                        completion(.success(items))
+                    }
                 } else {
-                    completion(.failure(AppError.parsingError))
+                    completionQueue.async {
+                        completion(.failure(AppError.parsingError))
+                    }
                 }
                 self.cacheService.set(data: data, for: url.absoluteString)
             }
@@ -80,7 +87,9 @@ final class MainStackoverflowService: StackoverflowService {
             if let cacheData = cacheService.get(url.absoluteString),
                let question = try? JSONDecoder().decode(Question.self, from: cacheData),
                let items = question.items {
-                completion(.success(items))
+                completionQueue.async {
+                    completion(.success(items))
+                }
             }
         }
     }
@@ -114,4 +123,3 @@ final class MainStackoverflowService: StackoverflowService {
         task.resume()
     }
 }
-

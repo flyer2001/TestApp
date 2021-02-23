@@ -8,13 +8,18 @@
 
 import UIKit
 
-class AnswerTableViewCell: UITableViewCell {
+/// Ячейка ответов
+final class AnswerTableViewCell: UITableViewCell {
+    
+    // MARK: - IBOutlet
 
-    @IBOutlet weak var answerLabel: UILabel!
-    @IBOutlet weak var authorLabel: UILabel!
-    @IBOutlet weak var lastActivityDateLabel: UILabel!
-    @IBOutlet weak var numberOfVotesLabel: UILabel!
-    @IBOutlet weak var checkImageView: UIImageView!
+    @IBOutlet private var answerLabel: UILabel!
+    @IBOutlet private var authorLabel: UILabel!
+    @IBOutlet private var lastActivityDateLabel: UILabel!
+    @IBOutlet private var numberOfVotesLabel: UILabel!
+    @IBOutlet private var checkImageView: UIImageView!
+    
+    // MARK: - Public Methods
     
     func fill(_ answer: AnswerItem?) {
         backgroundColor = UIColor.white
@@ -49,5 +54,4 @@ class AnswerTableViewCell: UITableViewCell {
         }
         checkImageView.isHidden = (answer?.is_accepted != nil) ?? true
     }
-    
 }

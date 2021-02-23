@@ -8,9 +8,30 @@
 
 import UIKit
 
-class CacheWithTimeInterval: NSObject {
+/// Сервис для работы с кешируемыми данными
+protocol CacheService: class {
+    
+    /// Получить закешированный объект по ключу
+    func get(_ key: String) -> Data?
+    
+    /// Сохранить закешированный объект по ключу
+    func set(data: Data?, for key: String)
+    
+    /// Сбросить закешированные данные
+    func resetDefaults()
+}
 
-    class func objectForKey(_ key: String) -> Data? {
+final class CacheWithTimeInterval: CacheService {
+    
+    func resetDefaults() {
+        let defaults = UserDefaults.standard
+        let dictionary = defaults.dictionaryRepresentation()
+        dictionary.keys.forEach { key in
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    func get(_ key: String) -> Data? {
         var arrayOfCachedData: [Data] = []
         if UserDefaults.standard.array(forKey: "cache") != nil {
             arrayOfCachedData = UserDefaults.standard.array(forKey: "cache") as! [Data]
@@ -34,19 +55,17 @@ class CacheWithTimeInterval: NSObject {
         return nil
     }
     
-    class func set(data: Data?, for key: String) {
+    func set(data: Data?, for key: String) {
         var arrayOfCachedData: [Data] = []
-        if UserDefaults.standard.array(forKey: "cache") != nil {
-            arrayOfCachedData = UserDefaults.standard.array(forKey: "cache") as! [Data]
+        if let cache = UserDefaults.standard.array(forKey: "cache"),
+           let cachedData = cache as? [Data] {
+            arrayOfCachedData = cachedData
         }
-        if data != nil {
-            if CacheWithTimeInterval.objectForKey(key) == nil {
-                let storedData = StoredData(key: key, date: Date(), data: data!)
-                let data = try? PropertyListEncoder().encode(storedData)
-                arrayOfCachedData.append(data!)
-            }
+
+        if let data = data, get(key) == nil,
+           let storedData = try? PropertyListEncoder().encode(StoredData(key: key, date: Date(), data: data)) {
+            arrayOfCachedData.append(storedData)
         }
         UserDefaults.standard.set(arrayOfCachedData, forKey: "cache")
     }
-    
 }

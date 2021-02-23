@@ -8,17 +8,28 @@
 
 import UIKit
 
-class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+// Контроллер экрана ответов на вопрос
+final class DetailViewController: UIViewController {
 
+    // MARK: - Public properties
+    
+    private var currentQuestion: Item?
+    
+    // MARK: - IBOutlet
+    
+    @IBOutlet var tableView: UITableView!
+    @IBOutlet var titleNavigationItem: UINavigationItem!
+    
+    // MARK: - Private properties
+    
     private let kQuestionCellIdentifier = "CellForQuestion"
     private let kAnswerCellIdentifier = "CellForAnswer"
+    private var refreshControl: UIRefreshControl!
+    private var activityIndicatorView: UIActivityIndicatorView!
+    private var answers: [AnswerItem] = []
+    private let stackoverflowService: StackoverflowService = ServiceLayer.shared.stackoverflowService
     
-    @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var titleNavigationItem: UINavigationItem!
-    var refreshControl: UIRefreshControl!
-    var activityIndicatorView: UIActivityIndicatorView!
-    var answers: [AnswerItem]! = [AnswerItem()]
-    var currentQuestion: Item!
+    // MARK: - UIViewController
     
     override func viewDidLoad() {
         tableView.register(UINib(nibName: "AnswerTableViewCell", bundle: nil), forCellReuseIdentifier: kAnswerCellIdentifier)
@@ -28,28 +39,23 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
         addActivityIndicator()
     }
     
-    // MARK: - TableView
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if answers.count == 0 {
-            activityIndicatorView.startAnimating()
+    // MARK: - Public Methods
+    
+    func loadAnswers(for currentQuestion: Item) {
+        self.currentQuestion = currentQuestion
+        guard let id = currentQuestion.question_id else { return }
+        stackoverflowService.getAnswers(id: id) { [weak self] result in
+            switch result {
+            case .failure:
+                // TODO: обрабобать ошибку
+            print("error")
+            case .success(let answers):
+                self?.reload(inTableView: answers)
+            }
         }
-        return answers.count + 1
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.row == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: kQuestionCellIdentifier, for: indexPath) as? QuestionTableViewCell
-            cell?.fill(currentQuestion)
-            titleNavigationItem.title = "\(String(describing: currentQuestion.title))"
-            return cell!
-        } else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: kAnswerCellIdentifier, for: indexPath) as? AnswerTableViewCell
-            var answer: AnswerItem?
-            answer = answers?[indexPath.row - 1]
-            cell?.fill(answer)
-            return cell!
-        }
-    }
+    // MARK: - Private Methods
     
     @objc func reloadData() {
         tableView.reloadData()
@@ -63,16 +69,8 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
             refreshControl?.endRefreshing()
         }
     }
-    
-    // MARK: - Public
-    func loadAnswers() {
-        FabricRequest.request(withQuestionID: currentQuestion.question_id!) { data in
-            self.reload(inTableView: data)
-        }
-    }
 
-    // MARK: - Private
-    func addActivityIndicator() {
+    private func addActivityIndicator() {
         activityIndicatorView = UIActivityIndicatorView()
         activityIndicatorView.style = .gray
         let bounds: CGRect = UIScreen.main.bounds
@@ -81,7 +79,7 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
         view.addSubview(activityIndicatorView)
     }
     
-    func addRefreshControlOnTabelView() {
+    private func addRefreshControlOnTabelView() {
         refreshControl = UIRefreshControl()
         refreshControl?.addTarget(self, action: #selector(self.reloadData), for: .valueChanged)
         refreshControl?.backgroundColor = UIColor.white
@@ -90,20 +88,43 @@ class DetailViewController: UIViewController, UITableViewDelegate, UITableViewDa
         }
     }
     
-    func settingDynamicHeightForCell() {
+    private func settingDynamicHeightForCell() {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
     }
     
-    func reload(inTableView jsonData: Data?) {
-        answers = [AnswerItem]()
-        if let answerModel = try? JSONDecoder().decode(Answer.self, from: jsonData!) {
-            answers = answerModel.items
-        }
+    private func reload(inTableView answers: [AnswerItem]) {
+        self.answers = answers
         DispatchQueue.main.async(execute: {
             self.tableView.reloadData()
             self.activityIndicatorView.stopAnimating()
         })
     }
+}
 
+// MARK: - UITableViewDataSource
+
+extension DetailViewController: UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if answers.count == 0 {
+            activityIndicatorView.startAnimating()
+        }
+        return answers.count + 1
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.row == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: kQuestionCellIdentifier, for: indexPath) as? QuestionTableViewCell
+            cell?.fill(currentQuestion)
+            titleNavigationItem.title = "\(currentQuestion?.title ?? "")"
+            return cell!
+        } else {
+            let cell = tableView.dequeueReusableCell(withIdentifier: kAnswerCellIdentifier, for: indexPath) as? AnswerTableViewCell
+            var answer: AnswerItem?
+            answer = answers[indexPath.row - 1]
+            cell?.fill(answer)
+            return cell!
+        }
+    }
 }

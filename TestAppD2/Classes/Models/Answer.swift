@@ -8,23 +8,7 @@
 
 import UIKit
 
-class Answer1: NSObject {
-    var questionID: Int? = 0
-    var body: String? = ""
-    var author: String? = ""
-    var numberOfVotes: Int? = 0
-    var lastActivityDate: Date?
-    var isAccepted: Bool? = false
-}
-
-class Answer: Decodable {
+/// Модель списка ответов
+struct Answer: Decodable {
     var items: [AnswerItem]?
-}
-
-struct AnswerItem: Decodable {
-    var owner: Owner?
-    var score: Int?
-    var last_activity_date: Int?
-    var body: String?
-    var is_accepted: Bool?
 }

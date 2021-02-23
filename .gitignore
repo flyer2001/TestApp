@@ -1,0 +1,32 @@
+# Build generated
+
+build/
+
+# Xcode Files
+\*.xcodeproj/
+\*.xcworkspace/
+
+# User settings
+xcuserdata/
+
+# Other
+\*.xccheckout
+\*.xcscmblueprint
+.DS\_Store
+
+
+# Obj\-C/Swift specific
+\*.hmap
+\*.ipa
+
+# CocoaPods
+
+Pods/
+!Podfile.lock
+
+# Ruby gems folders
+.bundle/
+vendor/ 
+
+# Environment file
+.env

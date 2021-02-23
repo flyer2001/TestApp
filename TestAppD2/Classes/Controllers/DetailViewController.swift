@@ -13,7 +13,7 @@ final class DetailViewController: UIViewController {
 
     // MARK: - Public properties
     
-    var currentQuestion: Item!
+    private var currentQuestion: Item?
     
     // MARK: - IBOutlet
     
@@ -26,7 +26,7 @@ final class DetailViewController: UIViewController {
     private let kAnswerCellIdentifier = "CellForAnswer"
     private var refreshControl: UIRefreshControl!
     private var activityIndicatorView: UIActivityIndicatorView!
-    private var answers: [AnswerItem]! = [AnswerItem()]
+    private var answers: [AnswerItem] = []
     private let stackoverflowService: StackoverflowService = ServiceLayer.shared.stackoverflowService
     
     // MARK: - UIViewController
@@ -41,7 +41,8 @@ final class DetailViewController: UIViewController {
     
     // MARK: - Public Methods
     
-    func loadAnswers() {
+    func loadAnswers(for currentQuestion: Item) {
+        self.currentQuestion = currentQuestion
         guard let id = currentQuestion.question_id else { return }
         stackoverflowService.getAnswers(id: id) { [weak self] result in
             switch result {
@@ -116,12 +117,12 @@ extension DetailViewController: UITableViewDataSource {
         if indexPath.row == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: kQuestionCellIdentifier, for: indexPath) as? QuestionTableViewCell
             cell?.fill(currentQuestion)
-            titleNavigationItem.title = "\(String(describing: currentQuestion.title))"
+            titleNavigationItem.title = "\(currentQuestion?.title ?? "")"
             return cell!
         } else {
             let cell = tableView.dequeueReusableCell(withIdentifier: kAnswerCellIdentifier, for: indexPath) as? AnswerTableViewCell
             var answer: AnswerItem?
-            answer = answers?[indexPath.row - 1]
+            answer = answers[indexPath.row - 1]
             cell?.fill(answer)
             return cell!
         }

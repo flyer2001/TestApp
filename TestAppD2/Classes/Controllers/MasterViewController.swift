@@ -74,8 +74,7 @@ final class MasterViewController: UIViewController {
         let indexPath: IndexPath? = tableView.indexPathForSelectedRow
         let detailViewController = (segue.destination as? UINavigationController)?.topViewController as? DetailViewController
         let item = questions[indexPath?.row ?? 0]
-        detailViewController?.currentQuestion = item
-        detailViewController?.loadAnswers()
+        detailViewController?.loadAnswers(for: item)
         detailViewController?.navigationItem.leftBarButtonItem = splitViewController?.displayModeButtonItem
         detailViewController?.navigationItem.leftItemsSupplementBackButton = true
     }
@@ -166,6 +165,7 @@ final class MasterViewController: UIViewController {
     @objc private func requestedTagNotification(_ notification: Notification?) {
         activityIndicatorView.startAnimating()
         guard let newTag = notification?.object as? String else { return }
+        requestedTag = newTag
         numberOfPageToLoad = 1
         loadQuestions(by: requestedTag)
     }

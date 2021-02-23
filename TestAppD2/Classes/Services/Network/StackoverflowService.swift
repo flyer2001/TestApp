@@ -107,16 +107,23 @@ final class MainStackoverflowService: StackoverflowService {
         url = url.withQueryItems(queryItems)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        let completionQueue = self.completionQueue
         
         let task = defaultSession.dataTask(with: request) { (data, response, error) in
             guard let data = data, error == nil else {
-                completion(.failure(AppError.serverError))
+                completionQueue.async {
+                    completion(.failure(AppError.serverError))
+                }
                 return
             }
             if let answerData = try? JSONDecoder().decode(Answer.self, from: data), let answers = answerData.items {
-                completion(.success(answers))
+                completionQueue.async {
+                    completion(.success(answers))
+                }
             } else {
-                completion(.failure(AppError.parsingError))
+                completionQueue.async {
+                    completion(.failure(AppError.parsingError))
+                }
             }
             self.cacheService.set(data: data, for: url.absoluteString)
         }
